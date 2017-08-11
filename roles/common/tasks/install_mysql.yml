@@ -1,0 +1,30 @@
+---
+# These tasks install MySQL database and configure it.
+
+- name: Install MySQL package
+  become: true
+  apt: name={{ item }} state=installed
+  with_items:
+   - mysql-server
+
+- name: Create MySQL configuration file
+  become: true
+  template: src=my.cnf.j2 dest=/etc/mysql/my.cnf
+  notify:
+    - restart mysql
+
+- name: Start MySQL Service
+  become: true
+  service: name=mysql state=started enabled=yes
+
+- name: Install Python to MySQL connectors
+  become: true
+  apt: name={{ item }} state=present update_cache=true
+  with_items:
+    - python-mysqldb
+
+- name: Create Application Database
+  mysql_db: login_user=root name={{ dbname }} state=present
+
+- name: Create Application DB user
+  mysql_user: login_user=root name={{ dbuser }} password={{ upassword }} priv=*.*:ALL,GRANT host='%' state=present

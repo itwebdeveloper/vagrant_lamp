@@ -1,0 +1,30 @@
+---
+# These tasks are responsible for copying the latest dev/production code from
+# the version control system.
+
+- name: Remove the index.html file
+  become: true
+  file: path=/var/www/weather/ state=directory
+
+- name: Copy the code from repository
+  become: true
+  git: repo={{ repository }} dest=/var/www/weather/ accept_hostkey=True version=release/1.0.1
+
+- name: Create the application configuration file
+  become: true
+  template: src=config.php.j2 dest=/var/www/weather/config.php
+  notify:
+    - restart mysql
+
+- name: change owner of the public directory
+  become: true
+  file:
+    path: /var/www/weather
+    state: directory
+    owner: www-data
+    group: www-data
+    recurse: yes
+
+- name: Remove the index.html file
+  become: true
+  file: path=/var/www/index.html state=absent
